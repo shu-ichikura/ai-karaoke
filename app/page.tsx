@@ -24,6 +24,7 @@ type Keyword = {
 export default function Home() {
   const [currentKeyword, setCurrentKeyword] = useState<string>('お題がまだありません');
   const [keywords, setKeywords] = useState<Keyword[]>([]);
+  const [remainingKeywords, setRemainingKeywords] = useState<Keyword[]>([]);
   const [users, setUsers] = useState(['shui', 'yasuko']);
   const [isLoading, setIsLoading] = useState(false);
   const [entries, setEntries] = useState(
@@ -41,8 +42,6 @@ export default function Home() {
   const fetchKeywords = async () => {
     setIsLoading(true);
     try {
-      //ローカルのAPIコール
-      //const res = await fetch('/api/generateKeywords');
       //AWSのAPIコール
       const res = await fetch('https://01r58ps5ud.execute-api.ap-northeast-1.amazonaws.com/prod/generateKeywords');
       const data = await res.json();
@@ -55,6 +54,7 @@ export default function Home() {
 
       const parsed: Keyword[] = data.result;
       setKeywords(parsed);
+      setRemainingKeywords([...parsed]);
       setCurrentKeyword('お題が準備できました。');
     } catch (err) {
       console.error('お題生成エラー:', err);
@@ -66,12 +66,19 @@ export default function Home() {
 
   // お題ランダム出題
   const showRandomKeyword = () => {
-    if (keywords.length === 0) {
-      setCurrentKeyword('お題がまだ生成されていません');
+    if (remainingKeywords.length === 0) {
+      setCurrentKeyword('すべてのお題を出題しました！再生成してください。');
       return;
     }
-    const random = keywords[Math.floor(Math.random() * keywords.length)];
-    setCurrentKeyword(`難易度${random.level}：${random.word}`);
+
+    const index = Math.floor(Math.random() * remainingKeywords.length);
+    const chosen = remainingKeywords[index];
+
+    const updated = [...remainingKeywords];
+    updated.splice(index, 1); // 選ばれたお題を削除
+
+    setRemainingKeywords(updated);
+    setCurrentKeyword(`難易度${chosen.level}：${chosen.word}`);
   };
 
   const handlePromptGenerate = (index: number) => {
