@@ -46,6 +46,13 @@ export default function Home() {
       //AWSのAPIコール
       const res = await fetch('https://01r58ps5ud.execute-api.ap-northeast-1.amazonaws.com/prod/generateKeywords');
       const data = await res.json();
+
+      if (!data.result || !Array.isArray(data.result)) {
+        console.error('API戻り値に result が含まれていない:', data);
+        setCurrentKeyword('お題の形式が不正です');
+        return;
+      }
+
       const parsed: Keyword[] = data.result;
       setKeywords(parsed);
       setCurrentKeyword('お題が準備できました。');
