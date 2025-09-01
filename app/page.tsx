@@ -41,7 +41,10 @@ export default function Home() {
   const fetchKeywords = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/generateKeywords');
+      //ローカルのAPIコール
+      //const res = await fetch('/api/generateKeywords');
+      //AWSのAPIコール
+      const res = await fetch('https://01r58ps5ud.execute-api.ap-northeast-1.amazonaws.com/prod/generateKeywords');
       const data = await res.json();
       const parsed: Keyword[] = data.result;
       setKeywords(parsed);
