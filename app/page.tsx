@@ -24,7 +24,7 @@ type Keyword = {
 export default function Home() {
   const [currentKeyword, setCurrentKeyword] = useState<string>('お題がまだありません');
   const [keywords, setKeywords] = useState<Keyword[]>([]);
-  const [users, setUsers] = useState(['shui', 'ichigo']);
+  const [users, setUsers] = useState(['shui', 'yasuko']);
   const [isLoading, setIsLoading] = useState(false);
   const [entries, setEntries] = useState(
     users.map((name) => ({
