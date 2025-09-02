@@ -85,7 +85,7 @@ export default function Home() {
     const newEntries = [...entries];
     const { name, artist, title } = newEntries[index];
 
-    const prompt = `ユーザ：${name}\n歌手名：${artist}\n曲名：${title}`;
+    const prompt = `お題：${currentKeyword}\nユーザ：${name}\n歌手名：${artist}\n曲名：${title}`;
 
     newEntries[index].prompt = prompt;
     setEntries(newEntries);
