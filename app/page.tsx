@@ -140,8 +140,9 @@ export default function Home() {
 
   // 採点結果受信
   useEffect(() => {
+    if (!sessionId) return;
+
     const intervalId = setInterval(async () => {
-      if (!sessionId) return;
       try {
           const res = await fetch(
             `https://i61gjpqf66.execute-api.ap-northeast-1.amazonaws.com/getScoringResult?sessionId=${sessionId}`
@@ -150,7 +151,7 @@ export default function Home() {
 
           const data = await res.json();
 
-          if (data?.keyword) {
+          if (data && typeof data === 'object' && data.keyword && data.user && data.keywordScore !== undefined) {
             setScoringResult(data);
           }
       } catch (err) {
@@ -159,7 +160,7 @@ export default function Home() {
     }, 5000); // 5秒おきにポーリング
 
     return () => clearInterval(intervalId);
-  }, []);
+  }, [sessionId]);
 
   return (
     <Container maxWidth="sm" sx={{ py: 4 }}>
@@ -283,7 +284,7 @@ export default function Home() {
       ))}
 
       {/* 採点結果 */}
-      {scoringResult && (
+      {scoringResult?.keyword && (
         <Paper
           elevation={6}
           sx={{ maxWidth: 'sm', mx: 'auto', bgcolor: 'background.paper', borderRadius: 2, p: 4, boxShadow: 3 }}
@@ -296,19 +297,19 @@ export default function Home() {
 
           <Box className="space-y-2 text-gray-800">
             <Typography variant="body1">
-              <strong>ユーザ：</strong>{scoringResult.user}
+              <strong>ユーザ：</strong>{scoringResult?.user}
             </Typography>
             <Typography variant="body1">
-              <strong>キーワード：</strong>{scoringResult.keyword}
+              <strong>キーワード：</strong>{scoringResult?.keyword}
             </Typography>
             <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-              <strong>出現ワード：</strong>{scoringResult.targetWordText}
+              <strong>出現ワード：</strong>{scoringResult?.targetWordText}
             </Typography>
             <Typography variant="h6" className="text-pink-700 font-bold mt-2">
-              スコア：{scoringResult.keywordScore} 点
+              スコア：{scoringResult?.keywordScore} 点
             </Typography>
             <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', mt: 1 }}>
-              コメント：{scoringResult.comment}
+              コメント：{scoringResult?.comment}
             </Typography>
           </Box>
         </Paper>
