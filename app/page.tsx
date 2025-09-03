@@ -141,9 +141,10 @@ export default function Home() {
   // 採点結果受信
   useEffect(() => {
     const intervalId = setInterval(async () => {
+      if (!sessionId) return;
       try {
           const res = await fetch(
-            'https://i61gjpqf66.execute-api.ap-northeast-1.amazonaws.com/getScoringResult?sessionId=${sessionId}'
+            `https://i61gjpqf66.execute-api.ap-northeast-1.amazonaws.com/getScoringResult?sessionId=${sessionId}`
           );
           if (!res.ok) return;
 
