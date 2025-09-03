@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRef } from 'react';
 import {
   Container,
   Typography,
@@ -11,10 +11,12 @@ import {
   Box,
   Divider,
   IconButton,
+  Modal,
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CircularProgress from '@mui/material/CircularProgress';
 import ScoringResults from '../components/ScoringResults';
+import { v4 as uuidv4 } from 'uuid';
 
 type Keyword = {
   number: number;
@@ -26,7 +28,7 @@ export default function Home() {
   const [currentKeyword, setCurrentKeyword] = useState<string>('お題がまだありません');
   const [keywords, setKeywords] = useState<Keyword[]>([]);
   const [remainingKeywords, setRemainingKeywords] = useState<Keyword[]>([]);
-  const [users, setUsers] = useState(['shui', 'yasuko']);
+  const [users, setUsers] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [entries, setEntries] = useState(
     users.map((name) => ({
@@ -45,6 +47,9 @@ export default function Home() {
     keywordScore: number;
     comment: string;
   } | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(true);
+  const [modalUsers, setModalUsers] = useState<string[]>(['', '', '', '', '']);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   // お題生成（API呼び出し）
   const fetchKeywords = async () => {
@@ -94,7 +99,11 @@ export default function Home() {
     const newEntries = [...entries];
     const { name, artist, title } = newEntries[index];
 
-    const prompt = `お題：${currentKeyword}\nユーザ：${name}\n歌手名：${artist}\n曲名：${title}`;
+    // currentKeywordからword部分だけを抽出
+    const keywordMatch = currentKeyword.match(/：(.+)$/);
+    const keyword = keywordMatch ? keywordMatch[1] : currentKeyword;
+
+    const prompt = `セッションID：${sessionId}\nお題：${keyword}\nユーザ：${name}\n歌手名：${artist}\n曲名：${title}`;
 
     newEntries[index].prompt = prompt;
     setEntries(newEntries);
@@ -107,12 +116,34 @@ export default function Home() {
     navigator.clipboard.writeText(text);
   };
 
+  const handleStartGame = () => {
+    const filteredUsers = modalUsers.filter((user) => user.trim() !== '');
+    if (filteredUsers.length > 0) {
+      setUsers(filteredUsers);
+      setSessionId(uuidv4());
+      setIsModalOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    setEntries(
+      users.map((name) => ({
+        name,
+        artist: '',
+        title: '',
+        prompt: '',
+        score: '',
+        comment: '',
+      }))
+    );
+  }, [users]);
+
   // 採点結果受信
   useEffect(() => {
     const intervalId = setInterval(async () => {
       try {
           const res = await fetch(
-            'https://i61gjpqf66.execute-api.ap-northeast-1.amazonaws.com/getScoringResult?user=shui'
+            'https://i61gjpqf66.execute-api.ap-northeast-1.amazonaws.com/getScoringResult?sessionId=${sessionId}'
           );
           if (!res.ok) return;
 
@@ -131,6 +162,50 @@ export default function Home() {
 
   return (
     <Container maxWidth="sm" sx={{ py: 4 }}>
+      <Modal open={isModalOpen}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 400,
+            bgcolor: 'background.paper',
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 2,
+          }}
+        >
+          <Typography variant="h6" align="center" sx={{ mb: 2 }}>
+            ユーザーを入力してください
+          </Typography>
+          {modalUsers.map((user, index) => (
+            <TextField
+              key={index}
+              fullWidth
+              margin="dense"
+              label={`ユーザー${index + 1}`}
+              value={user}
+              onChange={(e) => {
+                const updatedUsers = [...modalUsers];
+                updatedUsers[index] = e.target.value;
+                setModalUsers(updatedUsers);
+              }}
+            />
+          ))}
+          <Button
+            fullWidth
+            variant="contained"
+            color="primary"
+            sx={{ mt: 2 }}
+            onClick={handleStartGame}
+            disabled={modalUsers.every((user) => user.trim() === '')}
+          >
+            ゲーム開始
+          </Button>
+        </Box>
+      </Modal>
+
       {/* お題エリア */}
       <Box textAlign="center" mb={4}>
         <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', mt: 2 }}>
