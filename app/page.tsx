@@ -141,28 +141,29 @@ export default function Home() {
   }, [users]);
 
   // 採点結果受信
-  useEffect(() => {
-    if (!sessionId) return;
-
-    const intervalId = setInterval(async () => {
-      try {
-          const res = await fetch(
-            `https://i61gjpqf66.execute-api.ap-northeast-1.amazonaws.com/getScoringResult?sessionId=${sessionId}`
-          );
-          if (!res.ok) return;
-
-          const data = await res.json();
-
-          if (data && typeof data === 'object' && data.keyword && data.user && data.keywordScore !== undefined) {
-            setScoringResult(data);
-          }
-      } catch (err) {
-          console.error('採点結果取得エラー:', err);
+  const fetchScoringResult = async (sessionId: string, setScoringResult: Function) => {
+    try {
+      const res = await fetch(
+        `https://i61gjpqf66.execute-api.ap-northeast-1.amazonaws.com/getScoringResult?sessionId=${sessionId}`
+      );
+      if (!res.ok) {
+        console.warn('採点結果取得失敗: レスポンス異常');
+        return;
       }
-    }, 5000); // 5秒おきにポーリング
 
-    return () => clearInterval(intervalId);
-  }, [sessionId]);
+      const data = await res.json();
+      console.log('採点結果取得:', data);
+
+      if (data && typeof data === 'object' && data.keyword && data.user && data.keywordScore !== undefined) {
+        setScoringResult(data);
+      } else {
+        console.warn('形式不正 or データなし:', data);
+      }
+    } catch (err) {
+      console.error('採点結果取得エラー:', err);
+    }
+  };
+
 
   return (
     <Container maxWidth="sm" sx={{ py: 4 }}>
@@ -286,6 +287,20 @@ export default function Home() {
       ))}
 
       {/* 採点結果 */}
+      {sessionId && (
+        <Box textAlign="center" mb={2}>
+          <Button
+            variant="contained"
+            onClick={() => {
+              if (sessionId) fetchScoringResult(sessionId, setScoringResult);
+            }}
+          >
+            採点結果を更新
+          </Button>
+
+        </Box>
+      )}
+
       {scoringResult?.keyword && (
         <Paper
           elevation={6}
