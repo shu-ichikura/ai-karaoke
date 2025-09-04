@@ -94,7 +94,7 @@ const ScoringResults: React.FC<ScoringResultsProps> = ({ users, history }) => {
                       variant="outlined"
                       size="small"
                       onClick={() =>
-                        handleOpenModal('出現word', (item.targetWordText || []).join(', '))
+                        handleOpenModal('出現word', item.targetWordText || '—')
                       }
                     >
                       表示
