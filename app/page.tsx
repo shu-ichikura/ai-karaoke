@@ -24,22 +24,22 @@ type Keyword = {
   word: string;
 };
 
+type Entry = {
+  name: string;
+  artist: string;
+  title: string;
+  prompt: string;
+  score: string;
+  comment: string;
+};
+
 export default function Home() {
   const [currentKeyword, setCurrentKeyword] = useState<string>('お題がまだありません');
   const [keywords, setKeywords] = useState<Keyword[]>([]);
   const [remainingKeywords, setRemainingKeywords] = useState<Keyword[]>([]);
   const [users, setUsers] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [entries, setEntries] = useState(
-    users.map((name) => ({
-      name,
-      artist: '',
-      title: '',
-      prompt: '',
-      score: '',
-      comment: '',
-    }))
-  );
+  const [entries, setEntries] = useState<Entry[]>([]);
   const [scoringResult, setScoringResult] = useState<{
     user: string;
     keyword: string;
@@ -126,16 +126,18 @@ export default function Home() {
   };
 
   useEffect(() => {
-    setEntries(
-      users.map((name) => ({
-        name,
-        artist: '',
-        title: '',
-        prompt: '',
-        score: '',
-        comment: '',
-      }))
-    );
+    if (users.length > 0) {
+      setEntries(
+        users.map((name) => ({
+          name,
+          artist: '',
+          title: '',
+          prompt: '',
+          score: '',
+          comment: '',
+        }))
+      );
+    }
   }, [users]);
 
   // 採点結果受信
@@ -225,7 +227,7 @@ export default function Home() {
       </Box>
 
       {/* 選曲入力欄 */}
-      {entries.map((entry, i) => (
+      {entries.length > 0 && entries.map((entry, i) => (
         <Paper key={i} elevation={3} sx={{ p: 2, mb: 4 }}>
           <Typography variant="subtitle1" fontWeight="bold">
             ユーザー名：{entry.name}
@@ -317,7 +319,7 @@ export default function Home() {
 
       {/* 採点履歴 */}
       <Divider sx={{ my: 4 }} />
-      <ScoringResults users={users} />
+      {users.length > 0 && <ScoringResults users={users} />}
     </Container>
   );
 }

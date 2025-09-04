@@ -59,6 +59,7 @@ const ScoringResults: React.FC<ScoringResultsProps> = ({ users }) => {
   };
 
   const selected = scoringData[tabIndex];
+  if (!selected) return null;
 
   return (
     <Box>
