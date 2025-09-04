@@ -50,6 +50,8 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(true);
   const [modalUsers, setModalUsers] = useState<string[]>(['', '', '', '', '']);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [scoringHistory, setScoringHistory] = useState<any[]>([]);
+
 
   // お題生成（API呼び出し）
   const fetchKeywords = async () => {
@@ -163,6 +165,22 @@ export default function Home() {
       console.error('採点結果取得エラー:', err);
     }
   };
+
+  // 採点履歴取得
+  const fetchScoringHistory = async (
+  sessionId: string,
+  setScoringHistory: Function
+) => {
+  try {
+    const res = await fetch(
+      `https://z8vfsgqa9a.execute-api.ap-northeast-1.amazonaws.com/getScoringHistory?sessionId=${sessionId}`
+    );
+    const data = await res.json();
+    setScoringHistory(data || []);
+  } catch (err) {
+    console.error('採点履歴取得エラー:', err);
+  }
+};
 
 
   return (
@@ -292,12 +310,14 @@ export default function Home() {
           <Button
             variant="contained"
             onClick={() => {
-              if (sessionId) fetchScoringResult(sessionId, setScoringResult);
+              if (sessionId) {
+                fetchScoringResult(sessionId, setScoringResult);
+                fetchScoringHistory(sessionId, setScoringHistory);
+              }
             }}
           >
             採点結果を更新
           </Button>
-
         </Box>
       )}
 
@@ -334,7 +354,9 @@ export default function Home() {
 
       {/* 採点履歴 */}
       <Divider sx={{ my: 4 }} />
-      {users.length > 0 && <ScoringResults users={users} />}
+      {users.length > 0 && (
+        <ScoringResults users={users} history={scoringHistory} />
+      )}
     </Container>
   );
 }

@@ -10,45 +10,33 @@ import {
   TableCell,
   TableBody,
   Paper,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Modal,
   Button,
 } from '@mui/material';
 import { useState } from 'react';
 import SaveIcon from '@mui/icons-material/Save';
 
-const users = ['shui', 'ichigo'];
-
 interface ScoringResultsProps {
   users: string[];
+  history: any[];
 }
 
-const ScoringResults: React.FC<ScoringResultsProps> = ({ users }) => {
+const ScoringResults: React.FC<ScoringResultsProps> = ({ users, history }) => {
   const [tabIndex, setTabIndex] = useState(0);
-  const [scoringData, setScoringData] = useState(
-    users.map((name) => ({
-      name,
-      keyword: '夢',
-      artist: 'YOASOBI',
-      title: 'アイドル',
-      bonusWords: ['夢', '未来', '希望'],
-      bonusScore: 15,
-      vocalScore: '',
-      comment: 'すばらしい選曲でした！',
-    }))
-  );
   const [openModal, setOpenModal] = useState(false);
   const [modalContent, setModalContent] = useState('');
+  const [modalTitle, setModalTitle] = useState('');
+  const [vocalScores, setVocalScores] = useState<{ [key: string]: string }>({});
+
+  const selectedUser = users[tabIndex];
+  const selectedData = history.filter((item) => item.user === selectedUser);
 
   const handleVocalScoreChange = (index: number, value: string) => {
-    const updated = [...scoringData];
-    updated[index].vocalScore = value;
-    setScoringData(updated);
+    setVocalScores((prev) => ({ ...prev, [index]: value }));
   };
 
-  const handleOpenModal = (content: string) => {
+  const handleOpenModal = (title: string, content: string) => {
+    setModalTitle(title);
     setModalContent(content);
     setOpenModal(true);
   };
@@ -56,10 +44,8 @@ const ScoringResults: React.FC<ScoringResultsProps> = ({ users }) => {
   const handleCloseModal = () => {
     setOpenModal(false);
     setModalContent('');
+    setModalTitle('');
   };
-
-  const selected = scoringData[tabIndex];
-  if (!selected) return null;
 
   return (
     <Box>
@@ -86,8 +72,8 @@ const ScoringResults: React.FC<ScoringResultsProps> = ({ users }) => {
                 <TableCell sx={{ width: '20%' }}>お題</TableCell>
                 <TableCell sx={{ width: '20%' }}>Artist</TableCell>
                 <TableCell sx={{ width: '20%' }}>Music</TableCell>
-                <TableCell sx={{ width: '20%' }}>加点word</TableCell>
-                <TableCell sx={{ width: '10%' }}>word</TableCell>
+                <TableCell sx={{ width: '20%' }}>出現word</TableCell>
+                <TableCell sx={{ width: '10%' }}>score</TableCell>
                 <TableCell sx={{ width: '10%' }}>歌唱</TableCell>
                 <TableCell>Total</TableCell>
                 <TableCell>コメント</TableCell>
@@ -95,56 +81,60 @@ const ScoringResults: React.FC<ScoringResultsProps> = ({ users }) => {
               </TableRow>
             </TableHead>
             <TableBody>
-              <TableRow>
-                <TableCell>{selected.keyword}</TableCell>
-                <TableCell>{selected.artist}</TableCell>
-                <TableCell>{selected.title}</TableCell>
-                <TableCell>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={() =>
-                      handleOpenModal(selected.bonusWords.join(', '))
-                    }
-                  >
-                    表示
-                  </Button>
-                </TableCell>
-                <TableCell>{selected.bonusScore}</TableCell>
-                <TableCell>
-                  <TextField
-                    type="number"
-                    size="small"
-                    sx={{ width: '60px' }}
-                    value={selected.vocalScore}
-                    onFocus={(e) => {
-                      if (!e.target.value) {
-                        handleVocalScoreChange(tabIndex, '85');
+              {selectedData.map((item, idx) => {
+                const vocal = vocalScores[idx] || '';
+                const total = vocal ? parseInt(vocal) + (item.keywordScore ?? 0) : '—';
+                return (
+                <TableRow key={idx}>
+                  <TableCell>{item.keyword}</TableCell>
+                  <TableCell>{item.artist || '—'}</TableCell>
+                  <TableCell>{item.music || '—'}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() =>
+                        handleOpenModal('出現word', (item.bonusWords || []).join(', '))
                       }
-                    }}
-                    onChange={(e) =>
-                      handleVocalScoreChange(tabIndex, e.target.value)
-                    }
-                  />
-                </TableCell>
-                <TableCell>
-                  {selected.vocalScore
-                    ? parseInt(selected.vocalScore) + selected.bonusScore
-                    : '—'}
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={() => handleOpenModal(selected.comment)}
-                  >
-                    表示
-                  </Button>
-                </TableCell>
-                <TableCell>
-                  <SaveIcon sx={{ cursor: 'pointer' }} />
-                </TableCell>
-              </TableRow>
+                    >
+                      表示
+                    </Button>
+                  </TableCell>
+                  <TableCell>{item.keywordScore}</TableCell>
+                  <TableCell>
+                    <TextField
+                      type="number"
+                      size="small"
+                      sx={{ width: '60px' }}
+                      value={vocal}
+                      onFocus={(e) => {
+                        if (!e.target.value) {
+                          handleVocalScoreChange(idx, '85');
+                        }
+                      }}
+                      onChange={(e) =>
+                        handleVocalScoreChange(idx, e.target.value)
+                      }
+                    />
+                  </TableCell>
+                  <TableCell>{total}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() =>
+                        handleOpenModal('コメント', item.comment || 'なし')
+                      }
+                    >
+                      表示
+                    </Button>
+                  </TableCell>
+                  <TableCell>
+                    <SaveIcon sx={{ cursor: 'pointer' }} />
+                  </TableCell>
+                </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </Box>
@@ -164,7 +154,7 @@ const ScoringResults: React.FC<ScoringResultsProps> = ({ users }) => {
           }}
         >
           <Typography variant="h6" component="h2">
-            コメント
+            {modalTitle}
           </Typography>
           <Typography sx={{ mt: 2 }}>{modalContent}</Typography>
         </Box>
