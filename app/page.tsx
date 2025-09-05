@@ -16,6 +16,7 @@ import {
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CircularProgress from '@mui/material/CircularProgress';
 import ScoringResults from '../components/ScoringResults';
+import { updateVocalScore } from "@/lib/api/updateVocalScore";
 import { v4 as uuidv4 } from 'uuid';
 
 type Keyword = {
@@ -41,11 +42,13 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [scoringResult, setScoringResult] = useState<{
+    songId: string;
     user: string;
     keyword: string;
     targetWordText: string;
     keywordScore: number;
     comment: string;
+    vocalScore?: string;
   } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(true);
   const [modalUsers, setModalUsers] = useState<string[]>(['', '', '', '', '']);
@@ -348,6 +351,40 @@ export default function Home() {
             <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', mt: 1 }}>
               コメント：{scoringResult?.comment}
             </Typography>
+          </Box>
+          <Box mt={3}>
+            <TextField
+              type="number"
+              label="歌唱スコアを入力（例: 80）"
+              variant="outlined"
+              size="small"
+              sx={{ width: 180 }}
+              value={scoringResult?.vocalScore || ''}
+              onChange={(e) => {
+                const vocal = e.target.value;
+                setScoringResult((prev) => prev ? { ...prev, vocalScore: vocal } : null);
+              }}
+            />
+            <Button
+              variant="contained"
+              color="primary"
+              sx={{ ml: 2 }}
+              onClick={async () => {
+                if (!scoringResult?.songId || !scoringResult?.vocalScore) {
+                  alert('songId または vocalScore が不足しています');
+                  return;
+                }
+                try {
+                  await updateVocalScore(scoringResult.songId, Number(scoringResult.vocalScore));
+                  alert('スコアを保存しました');
+                } catch (err) {
+                  console.error('スコア保存エラー:', err);
+                  alert('保存に失敗しました');
+                }
+              }}
+            >
+              保存
+            </Button>
           </Box>
         </Paper>
       )}

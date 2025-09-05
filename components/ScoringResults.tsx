@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import { useState } from 'react';
 import SaveIcon from '@mui/icons-material/Save';
+import { updateVocalScore } from '@/lib/api/updateVocalScore';
 
 interface ScoringResultsProps {
   users: string[];
@@ -130,7 +131,24 @@ const ScoringResults: React.FC<ScoringResultsProps> = ({ users, history }) => {
                     </Button>
                   </TableCell>
                   <TableCell>
-                    <SaveIcon sx={{ cursor: 'pointer' }} />
+                    <SaveIcon
+                      sx={{ cursor: 'pointer' }}
+                      onClick={async () => {
+                        const score = vocalScores[idx];
+                        if (!score) {
+                          alert('スコアが未入力です');
+                          return;
+                        }
+                        try {
+                          const res = await updateVocalScore(item.songId, Number(score));
+                          console.log('保存完了:', res);
+                          alert('保存しました');
+                        } catch (error) {
+                          console.error('保存エラー:', error);
+                          alert('保存に失敗しました');
+                        }
+                      }}
+                    />
                   </TableCell>
                 </TableRow>
                 );
