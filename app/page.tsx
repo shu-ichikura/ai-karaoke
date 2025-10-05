@@ -376,7 +376,9 @@ export default function Home() {
                 }
                 try {
                   await updateVocalScore(scoringResult.songId, Number(scoringResult.vocalScore));
-                  alert('スコアを保存しました');
+                  if (sessionId) {
+                    await fetchScoringHistory(sessionId, setScoringHistory);
+                  }
                 } catch (err) {
                   console.error('スコア保存エラー:', err);
                   alert('保存に失敗しました');
