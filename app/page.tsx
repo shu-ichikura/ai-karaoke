@@ -97,6 +97,21 @@ export default function Home() {
 
     setRemainingKeywords(updated);
     setCurrentKeyword(`難易度${chosen.level}：${chosen.word}`);
+
+    // 選曲入力欄と採点プロンプトを初期化
+    setEntries(
+      users.map((name) => ({
+        name,
+        artist: '',
+        title: '',
+        prompt: '',
+        score: '',
+        comment: '',
+      }))
+    );
+
+    // 採点結果表示Boxを非表示にする
+    setScoringResult(null);
   };
 
   // 採点プロンプト生成＆クリップボードコピー
@@ -323,7 +338,7 @@ export default function Home() {
           </Button>
         </Box>
       )}
-
+      {/* 採点結果表示Box */}
       {scoringResult?.keyword && (
         <Paper
           elevation={6}
