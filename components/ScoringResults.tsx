@@ -2,7 +2,6 @@ import {
   Tabs,
   Tab,
   Box,
-  TextField,
   Typography,
   Table,
   TableHead,
@@ -11,11 +10,8 @@ import {
   TableBody,
   Paper,
   Modal,
-  Button,
 } from '@mui/material';
 import { useState } from 'react';
-import SaveIcon from '@mui/icons-material/Save';
-import { updateVocalScore } from '@/lib/api/updateVocalScore';
 
 interface ScoringResultsProps {
   users: string[];
@@ -24,28 +20,17 @@ interface ScoringResultsProps {
 
 const ScoringResults: React.FC<ScoringResultsProps> = ({ users, history }) => {
   const [tabIndex, setTabIndex] = useState(0);
-  const [openModal, setOpenModal] = useState(false);
-  const [modalContent, setModalContent] = useState('');
-  const [modalTitle, setModalTitle] = useState('');
-  const [vocalScores, setVocalScores] = useState<{ [key: string]: string }>({});
+  const [selectedItem, setSelectedItem] = useState<any | null>(null);
 
   const selectedUser = users[tabIndex];
   const selectedData = history.filter((item) => item.user === selectedUser);
 
-  const handleVocalScoreChange = (index: number, value: string) => {
-    setVocalScores((prev) => ({ ...prev, [index]: value }));
-  };
-
-  const handleOpenModal = (title: string, content: string) => {
-    setModalTitle(title);
-    setModalContent(content);
-    setOpenModal(true);
+  const handleRowClick = (item: any) => {
+    setSelectedItem(item);
   };
 
   const handleCloseModal = () => {
-    setOpenModal(false);
-    setModalContent('');
-    setModalTitle('');
+    setSelectedItem(null);
   };
 
   return (
@@ -70,113 +55,69 @@ const ScoringResults: React.FC<ScoringResultsProps> = ({ users, history }) => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ width: '20%' }}>お題</TableCell>
-                <TableCell sx={{ width: '20%' }}>Artist</TableCell>
-                <TableCell sx={{ width: '20%' }}>Music</TableCell>
-                <TableCell sx={{ width: '20%' }}>出現word</TableCell>
-                <TableCell sx={{ width: '10%' }}>score</TableCell>
-                <TableCell sx={{ width: '10%' }}>歌唱</TableCell>
-                <TableCell>Total</TableCell>
-                <TableCell>コメント</TableCell>
-                <TableCell></TableCell>
+                <TableCell>お題</TableCell>
+                <TableCell>曲名</TableCell>
+                <TableCell>スコア</TableCell>
+                <TableCell>歌唱スコア</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {selectedData.map((item, idx) => {
-                const vocal = vocalScores[idx] || '';
-                const total = vocal ? parseInt(vocal) + (item.keywordScore ?? 0) : '—';
-                return (
-                <TableRow key={idx}>
+              {selectedData.map((item, idx) => (
+                <TableRow
+                  key={idx}
+                  onClick={() => handleRowClick(item)}
+                  style={{ cursor: 'pointer' }}
+                >
                   <TableCell>{item.keyword}</TableCell>
-                  <TableCell>{item.artist || '—'}</TableCell>
                   <TableCell>{item.music || '—'}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() =>
-                        handleOpenModal('出現word', item.targetWordText || '—')
-                      }
-                    >
-                      表示
-                    </Button>
-                  </TableCell>
                   <TableCell>{item.keywordScore}</TableCell>
-                  <TableCell>
-                    <TextField
-                      type="number"
-                      size="small"
-                      sx={{ width: '60px' }}
-                      value={vocal}
-                      onFocus={(e) => {
-                        if (!e.target.value) {
-                          handleVocalScoreChange(idx, '85');
-                        }
-                      }}
-                      onChange={(e) =>
-                        handleVocalScoreChange(idx, e.target.value)
-                      }
-                    />
-                  </TableCell>
-                  <TableCell>{total}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() =>
-                        handleOpenModal('コメント', item.comment || 'なし')
-                      }
-                    >
-                      表示
-                    </Button>
-                  </TableCell>
-                  <TableCell>
-                    <SaveIcon
-                      sx={{ cursor: 'pointer' }}
-                      onClick={async () => {
-                        const score = vocalScores[idx];
-                        if (!score) {
-                          alert('スコアが未入力です');
-                          return;
-                        }
-                        try {
-                          const res = await updateVocalScore(item.songId, Number(score));
-                          console.log('保存完了:', res);
-                          alert('保存しました');
-                        } catch (error) {
-                          console.error('保存エラー:', error);
-                          alert('保存に失敗しました');
-                        }
-                      }}
-                    />
-                  </TableCell>
+                  <TableCell>{item.vocalScore || '—'}</TableCell>
                 </TableRow>
-                );
-              })}
+              ))}
             </TableBody>
           </Table>
         </Box>
       </Paper>
 
-      <Modal open={openModal} onClose={handleCloseModal}>
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 400,
-            bgcolor: 'background.paper',
-            boxShadow: 24,
-            p: 4,
-          }}
-        >
-          <Typography variant="h6" component="h2">
-            {modalTitle}
-          </Typography>
-          <Typography sx={{ mt: 2 }}>{modalContent}</Typography>
-        </Box>
-      </Modal>
+      {selectedItem && (
+        <Modal open={true} onClose={handleCloseModal}>
+          <Box
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: 400,
+              bgcolor: 'background.paper',
+              boxShadow: 24,
+              p: 4,
+              borderRadius: 2,
+            }}
+          >
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              詳細情報
+            </Typography>
+            <Typography variant="body1">
+              <strong>お題:</strong> {selectedItem.keyword}
+            </Typography>
+            <Typography variant="body1">
+              <strong>曲名:</strong> {selectedItem.music || '—'}
+            </Typography>
+            <Typography variant="body1">
+              <strong>スコア:</strong> {selectedItem.keywordScore}
+            </Typography>
+            <Typography variant="body1">
+              <strong>歌唱スコア:</strong> {selectedItem.vocalScore || '—'}
+            </Typography>
+            <Typography variant="body1">
+              <strong>出現ワード:</strong> {selectedItem.targetWordText || '—'}
+            </Typography>
+            <Typography variant="body1">
+              <strong>コメント:</strong> {selectedItem.comment || '—'}
+            </Typography>
+          </Box>
+        </Modal>
+      )}
     </Box>
   );
 };
